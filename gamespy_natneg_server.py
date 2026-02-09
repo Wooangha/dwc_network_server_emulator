@@ -766,6 +766,7 @@ class GameSpyNatNegUDPServer(SocketServer.UDPServer):
         """Get server by public IP."""
         server = None
         ip_str = self.session_list[session_id][client_id]['addr'][0]
+        publicport = str(self.session_list[session_id][client_id]['addr'][1])
         servers = self.server_manager.get_natneg_server(session_id) \
                                      ._getvalue()
         
@@ -776,7 +777,9 @@ class GameSpyNatNegUDPServer(SocketServer.UDPServer):
             if server is not None:
                 break
             ip = str(utils.get_ip_from_str(ip_str, console))
-            server = next((s for s in servers if s['publicip'] == ip), None)
+            server = next((s for s in servers if s['publicip'] == ip and s.get('publicport') == publicport), None)
+            if server is None:
+                server = next((s for s in servers if s['publicip'] == ip), None)
 
         return server
 
