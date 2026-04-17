@@ -509,7 +509,6 @@ class GameSpyBackendServer(object):
             active_hosts = [s for s in mkw_servers if s.get("dwc_hoststate") == "2"]
 
             if not active_hosts:
-                # 첫 번째 활성 후보를 host로 강제
                 if value.get("dwc_suspend") == "0":
                     value["dwc_hoststate"] = "2"
                     value["dwc_groupid"] = value.get("dwc_groupid") if value.get("dwc_groupid") not in (None, "0") else "999999"
