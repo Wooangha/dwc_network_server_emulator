@@ -500,22 +500,26 @@ class GameSpyBackendServer(object):
         value['__session__'] = session
         value['__console__'] = console
 
-        logger.log(logging.DEBUG,
-                   "Added %s to the server list for %s",
-                   value, gameid)
         if gameid == "mariokartwii":
-            mkw_servers = [s for s in self.server_list.get(gameid, []) if s.get("dwc_mtype") == "0"]
+            hosts = [
+                s for s in self.server_list.get(gameid, [])
+                if s.get("dwc_hoststate") == "2"
+                and s.get("dwc_suspend") == "0"
+                and s.get("dwc_groupid") not in (None, "0", 0, "")
+            ]
 
-            active_hosts = [s for s in mkw_servers if s.get("dwc_hoststate") == "2"]
+            if hosts:
+                host = hosts[0]
 
-            if not active_hosts:
-                if value.get("dwc_suspend") == "0":
-                    value["dwc_hoststate"] = "2"
-                    value["dwc_groupid"] = value.get("dwc_groupid") if value.get("dwc_groupid") not in (None, "0") else "999999"
+                if (
+                    value.get("dwc_pid") != host.get("dwc_pid")
+                    and value.get("dwc_groupid") in (None, "0", 0, "")
+                ):
+                    value["dwc_groupid"] = host.get("dwc_groupid")
+
+        logger.log(logging.DEBUG, "Added %s to the server list for %s", value, gameid)
         self.server_list[gameid].append(value)
-        logger.log(logging.DEBUG,
-                   "%s servers: %d",
-                   gameid, len(self.server_list[gameid]))
+        logger.log(logging.DEBUG, "%s servers: %d", gameid, len(self.server_list[gameid]))
 
         return value
 
