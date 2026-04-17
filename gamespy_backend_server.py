@@ -490,9 +490,13 @@ class GameSpyBackendServer(object):
         """Make sure the user isn't hosting multiple servers or there isn't
         some left over server information that never got handled properly
         (game crashed, etc)."""
-        existing_servers = self.server_list.get(gameid, [])
-        hosts = []
+        if gameid == "mariokartwii":
+            value.pop("dwc_groupid", None)
 
+        # --- 기존 로직 그대로 ---
+        existing_servers = self.server_list.get(gameid, [])
+
+        hosts = []
         if gameid == "mariokartwii":
             hosts = [
                 s for s in existing_servers
@@ -507,9 +511,8 @@ class GameSpyBackendServer(object):
         if gameid not in self.server_list:
             self.server_list[gameid] = []
 
-        # Add new server
-        value['__session__'] = session
-        value['__console__'] = console
+        value["__session__"] = session
+        value["__console__"] = console
 
         if gameid == "mariokartwii":
             if hosts:
@@ -521,11 +524,8 @@ class GameSpyBackendServer(object):
             else:
                 value["dwc_hoststate"] = "2"
                 value["dwc_suspend"] = "0"
+                value["dwc_groupid"] = "999999"
 
-                if value.get("dwc_groupid") in (None, "", "0", 0):
-                    value["dwc_groupid"] = "999999"
-
-        # 6) append
         self.server_list[gameid].append(value)
 
         logger.log(logging.DEBUG, "Added %s to the server list for %s", value, gameid)
