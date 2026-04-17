@@ -490,6 +490,17 @@ class GameSpyBackendServer(object):
         """Make sure the user isn't hosting multiple servers or there isn't
         some left over server information that never got handled properly
         (game crashed, etc)."""
+        existing_servers = self.server_list.get(gameid, [])
+        hosts = []
+
+        if gameid == "mariokartwii":
+            hosts = [
+                s for s in existing_servers
+                if s.get("dwc_hoststate") == "2"
+                and s.get("dwc_suspend") == "0"
+                and s.get("dwc_groupid") not in (None, "", "0", 0)
+            ]
+
         self.delete_server(gameid, session)
 
         # If the game doesn't exist already, create a new list.
@@ -501,26 +512,23 @@ class GameSpyBackendServer(object):
         value['__console__'] = console
 
         if gameid == "mariokartwii":
-            mkw_servers = self.server_list.get(gameid, [])
-
-            hosts = [
-                s for s in mkw_servers
-                if s.get("dwc_hoststate") == "2" and s.get("dwc_suspend") == "0"
-            ]
-
-            if not hosts:
-                value["dwc_hoststate"] = "2"
-                value["dwc_suspend"] = "0"
-                value["dwc_groupid"] = value.get("dwc_groupid") if value.get("dwc_groupid") not in (None, "0", 0, "") else "999999"
-
-            else:
+            if hosts:
                 host = hosts[0]
 
                 if value.get("dwc_pid") != host.get("dwc_pid"):
                     value["dwc_groupid"] = host.get("dwc_groupid")
 
-        logger.log(logging.DEBUG, "Added %s to the server list for %s", value, gameid)
+            else:
+                value["dwc_hoststate"] = "2"
+                value["dwc_suspend"] = "0"
+
+                if value.get("dwc_groupid") in (None, "", "0", 0):
+                    value["dwc_groupid"] = "999999"
+
+        # 6) append
         self.server_list[gameid].append(value)
+
+        logger.log(logging.DEBUG, "Added %s to the server list for %s", value, gameid)
         logger.log(logging.DEBUG, "%s servers: %d", gameid, len(self.server_list[gameid]))
 
         return value
