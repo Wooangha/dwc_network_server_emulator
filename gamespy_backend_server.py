@@ -501,20 +501,22 @@ class GameSpyBackendServer(object):
         value['__console__'] = console
 
         if gameid == "mariokartwii":
+            mkw_servers = self.server_list.get(gameid, [])
+
             hosts = [
-                s for s in self.server_list.get(gameid, [])
-                if s.get("dwc_hoststate") == "2"
-                and s.get("dwc_suspend") == "0"
-                and s.get("dwc_groupid") not in (None, "0", 0, "")
+                s for s in mkw_servers
+                if s.get("dwc_hoststate") == "2" and s.get("dwc_suspend") == "0"
             ]
 
-            if hosts:
+            if not hosts:
+                value["dwc_hoststate"] = "2"
+                value["dwc_suspend"] = "0"
+                value["dwc_groupid"] = value.get("dwc_groupid") if value.get("dwc_groupid") not in (None, "0", 0, "") else "999999"
+
+            else:
                 host = hosts[0]
 
-                if (
-                    value.get("dwc_pid") != host.get("dwc_pid")
-                    and value.get("dwc_groupid") in (None, "0", 0, "")
-                ):
+                if value.get("dwc_pid") != host.get("dwc_pid"):
                     value["dwc_groupid"] = host.get("dwc_groupid")
 
         logger.log(logging.DEBUG, "Added %s to the server list for %s", value, gameid)
