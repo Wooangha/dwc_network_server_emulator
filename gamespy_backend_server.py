@@ -493,7 +493,6 @@ class GameSpyBackendServer(object):
         if gameid == "mariokartwii":
             value.pop("dwc_groupid", None)
 
-        # --- 기존 로직 그대로 ---
         existing_servers = self.server_list.get(gameid, [])
 
         hosts = []
